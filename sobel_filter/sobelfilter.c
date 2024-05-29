@@ -4,8 +4,8 @@
 #include "stb_image_write.h"
 #include <stdio.h>
 #include <stdlib.h>
+//#include <thread>
 #include <math.h>
-
 #define IMG_W 6
 #define IMG_L 6
 
@@ -51,6 +51,26 @@ unsigned char* convert_to_grayscale(unsigned char* image, int width, int height,
     return gray_image;
 }
 
+
+// Funcion para dividir una imagen en N
+// Entradas puntero a la imagen, altura, ancho. puntero al array donde guardar los punteros a las nuevas imagens, puntero al array donde guardar las alturas, numero a dividir
+void divideArray(unsigned char* originalArray, int height, int width, unsigned char** subArrays, int* heights, int N) {    
+    // Calculate the size of each sub-array
+    int baseHeight = height / N;
+    int remainder = height % N;
+
+    // Allocate memory for each sub-array and copy data
+    int offset = 0;
+    for (int i = 0; i < N; ++i) {
+        int subArrayHeight = baseHeight + (i < remainder ? 1 : 0);
+        heights[i] = subArrayHeight;
+        subArrays[i] = (unsigned char*)malloc(subArrayHeight * width * sizeof(unsigned char));
+        memcpy(subArrays[i], originalArray + offset, subArrayHeight * width * sizeof(unsigned char));
+        offset += subArrayHeight * width;
+    }
+}
+
+
 // Funcion para generar la matriz 3x3 con el pixel a procesar y sus vecinos 
 // Inputs: puntero al array con la imagen a procesar, matriz 3x3 con ceros donde almacenar el pixel y los vecinos, 
 // numero de fila del pixel,numero de columna del pixel,altura de la imagen, ancho de la imagen
@@ -73,28 +93,37 @@ void genNeighMatrix(unsigned char* inArray,unsigned char neighMatrix[3][3],int j
 }
 
 // Funcion para aplicar el filtro de sobel sobre una imagen 
-// Inputs: puntero a la imagen a procesar, puntero al array donde se almacena el resultado, altura y ancho de la imagen
-void sobelfilter(unsigned char* inArray, unsigned char* filterArray,int height ,int width){
+// Inputs: puntero a la imagen a procesar, puntero al array donde se almacena el resultado, altura y ancho de la imagen, numero del bloque de la imagen que se esta procesando
+void sobelfilter(unsigned char* inArray,unsigned char* filterArray,int height ,int width, int block_num){
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++)
         {   
             unsigned char neighMatrix[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
             genNeighMatrix(inArray, neighMatrix, j, i,height,width); // Genera la matriz para el pixel actual y los vecinos
             float result = sobelPixel(neighMatrix); // Calcula el resultado para el pixel actual 
-            filterArray[j * width + i] = result; // Guarda el valor calculado para e pixel actual de la imagen filtrada
+            filterArray[(j+block_num) * width + i] = result; // Guarda el valor calculado para e pixel actual de la imagen filtrada
         }
     }
 }
 
 int main(){
-
-    int width, height, channels;
     // Se carga la imagen en un array
-    unsigned char* image = stbi_load("/home/steven/Documents/Arqui2/image.jpg", &width, &height, &channels, 0);
+    int width, height, channels;
+    unsigned char* image = stbi_load("/home/steven/Documents/Arqui2/Proyecto2/image.jpg", &width, &height, &channels, 0);
     if (image == NULL) {
         fprintf(stderr, "No se pudo cargar la imagen\n");
         return -1;
     }
+
+    int thread_num = 4;
+
+    // Array para los punteros a los sub arrays de la imagen
+    unsigned char** subArrays = (unsigned char**)malloc(4 * sizeof(int));
+    // Array con el tamaño en filas de cada sub array
+    int* heights = (int*)malloc(4 * sizeof(int));
+
+    
+
      // Se convierte a escala de grises y se guarda en otro array
     unsigned char* gray_image = convert_to_grayscale(image, width, height, channels);
     if (gray_image == NULL) {
@@ -102,18 +131,22 @@ int main(){
         return -1;
     }    
 
+    // Se divide la imagen segun el numero de threads
+    divideArray(gray_image,height,width,subArrays,heights,thread_num);
+
     // Se guarda el espacio de memoria para alamcenar la imagen filtrada
     unsigned char* filter_image = (unsigned char*)malloc(width * height * sizeof(unsigned char));
 
-    // Se hace el filtrado
-    sobelfilter(gray_image, filter_image, height, width);
+    // Se llama varias veces a la funcion principal con cada sub array 
+    sobelfilter(subArrays[0],filter_image,heights[0],width,0);
+    sobelfilter(subArrays[1],filter_image,heights[1],width,heights[0]);
+    sobelfilter(subArrays[2],filter_image,heights[2],width,heights[0]+heights[1]);
+    sobelfilter(subArrays[3],filter_image,heights[3],width,heights[0]+heights[1]+heights[2]);
+
 
     // Se crea la nueva imagen y se libera la memoria 
-    if (!stbi_write_png("/home/steven/Documents/Arqui2/sobel_image.png", width, height, 1, filter_image, width)) {
+    if (!stbi_write_png("/home/steven/Documents/Arqui2/Proyecto2/sobel_image.png", width, height, 1, filter_image, width)) {
         fprintf(stderr, "No se pudo guardar la imagen en escala de grises\n");
-        free(gray_image);
-        free(filter_image);
-        stbi_image_free(image);
         return -1;
     }
 
@@ -121,7 +154,12 @@ int main(){
     free(gray_image);
     free(filter_image);
     stbi_image_free(image);
-
+    // Free the allocated memory
+    for (int i = 0; i < thread_num; ++i) {
+        free(subArrays[i]);
+    }
+    free(heights);
+    free(subArrays);
     printf("Imagen filtrada guardada exitosamente\n");
 
     return 0;
