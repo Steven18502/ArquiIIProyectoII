@@ -10,65 +10,66 @@
 Descargar la versión más estable de [Open MPI](https://www.open-mpi.org/software/)
 
 Crear un directorio en $HOME donde instalarlo
-´´´bash
+```bash
 mkdir $HOME/openmpi
-´´´
+```
+
 Mover el archivo comprimido descargado al directorio recién hecho
-´´´bash
+```bash
 mv $HOME/Downloads/openmpi-X.X.X.tar.gz $HOME/openmpi/
-´´´
+```
 
 Ir al directorio creado por medio de la terminal
-´´´bash
+```bash
 cd $HOME/openmpi/
-´´´
+```
 
 Extraer el paquete
-´´´bash
+```bash
 tar -xzvf openmpi-X.X.X.tar.gz
-´´´
+```
 
 Ir al directorio donde se descomprime el paquete
-´´´bash
+```bash
 cd $HOME/openmpi/openmpi-X.X.X
-´´´
+```
 
 Instalar build-essential
-´´´bash
+```bash
 sudo apt-get install build-essential
-´´´
+```
 
 Configurar donde instalar Open MPI
-´´´bash
+```bash
 ./configure --prefix=$HOME/openmpi
-´´´
+```
 
 Compilar el paquete de MPI
-´´´bash
+```bash
 make all
-´´´
+```
 Una vez compilado, se instala
-´´´bash
+```bash
 make install
-´´´
+```
 
 Instalar paquetes complementarios para MPI
-´´´bash
+```bash
 sudo apt-get install openmpi-bin libopenmpi-dev
-´´´
+```
 
 Agregar Open MPI a las variables de entorno
-´´´bash
+```bash
 export PATH=$PATH:$HOME/openmpi/bin
-´´´
-´´´bash
+```
+```bash
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/openmpi/lib
-´´´
+```
 
 Verificar la instalación con la versión del compilador de c en open mpi
-´´´bash
+```bash
 mpicc -v
-´´´
+```
 
 
 2. Configuración de red estática en el nodo esclavo
@@ -76,9 +77,9 @@ mpicc -v
 Si es necesario, crear una máquina virtual. En su configuración de red, escoger Bridged Adapter. No utilizar el default de 'NAT'
 
 Poner el nombre del adaptador que se puede encontrar con el siguiente comando en el nodo maestro
-´´´bash
+```bash
 ip address
-´´´
+```
 
 Asegurarse de ingresar la misma dirección MAC que el adaptador
 
@@ -108,17 +109,17 @@ Desconectarse y volverse a conectar para que los cambios ocurran
 3. Descarga de dependencias para la configuración del cluster
 
 Instalar dependencias en el nodo esclavo
-´´´bash
+```bash
 sudo apt-get install ssh
-´´´
-´´´bash
+```
+```bash
 sudo apt-get install nfs-common portmap
-´´´
+```
 
 Instalar dependencias en el nodo maestro
-´´´bash
+```bash
 sudo apt-get install nfs-kernel-server nfs-common portmap
-´´´
+```
 
 
 4. Configuración de red estática en el nodo maestro
@@ -218,15 +219,15 @@ En cada nodo del cluster, se necesita que todos los programas distribuidos por e
 Se configurará el recurso compartido
 
 Se creará un directorio en el home del nodo maestro. Este debería quedar a la par del directorio con nombre del usuario en /home/cluster/
-´´´bash
+```bash
 cd ..
 sudo mkdir clusterdir
-´´´
+```
 
 Como root se exportará el directorio para que se pueda acceder remotamente, a través del archivo export
-´´´bash
+```bash
 sudo nano /etc/exports
-´´´
+```
 
 Se abrirá para editar el archivo. Se debe agregar la ruta del directorio de la carpeta en el nodo maestro y las ips de los nodos esclavos
 ```txt
@@ -234,46 +235,46 @@ Se abrirá para editar el archivo. Se debe agregar la ruta del directorio de la 
 ```
 
 Se debe reiniciar el servicio de nfs
-´´´bash
+```bash
 sudo /etc/init.d/nfs-kernel-server restart
-´´´
+```
 
 Para verificar que se pueda acceder a la carpeta compartida desde el nodo esclavo se utiliza el comando showmount con el ip del nodo master
-´´´bash
+```bash
 showmount -e 192.168.50.100
-´´´
+```
 
 Se montará el recurso desde el cli para ser agregado a fstab. Así se hará el montado automático para que cada vez que arranque el nodo se cree en /home del nodo el directorio clusterdir igual que el nodo maestro. Ahí estarán los recursos compartidos del nodo maestro a través de nfs
 
 Se creará el directorio en el nodo esclavo
-´´´bash
+```bash
 sudo mkdir ../clusterdir
-´´´
+```
 
 Se abre el archivo fstab para editarlo
-´´´bash
+```bash
 sudo nano /etc/fstab
-´´´
+```
 
 Se modifica el archivo fstab agregando al final el ip del nodo maestro, la dirección del directorio del nodo maestro, la dirección del directorio del nodo esclavo
-´´´txt
+```txt
 192.168.50.100:/home/clusterdir /home/clusterdir nfs rw,sync,hard,intr 0 0
-´´´
+```
 
 Se monta
-´´´bash
+```bash
 sudo mount -a
-´´´
+```
 
 Para verificar la conexión
-´´´bash
+```bash
 mount
-´´´
+```
 
 Si se desea desmontar (no hacer)
-´´´bash
+```bash
 sudo umount -a
-´´´
+```
 
 7. Configuración del entorno de desarrollo
 
@@ -283,12 +284,12 @@ El paquete de build-essentials tiene lo necesario para desarrollar y compilar, q
 
 Se crea un archivo de compilación .mpi_hostfile en el nodo maestro
 
-´´´bash
+```bash
 nano .mpi_hostfile
-´´´
+```
 
 Se edita y se le agrega
-´´´txt
+```txt
 #Nodo maestro
 localhost slots=1
 
@@ -300,7 +301,7 @@ node2 slots=1
 
 #Nodo esclavo3
 node3 slots=1
-´´´
+```
 
 Cada slot son la cantidad de procesos por ejecutar
 
@@ -315,12 +316,12 @@ Se debe compilar con el compilador de mpi
 Y su binario ejecutable debe estar dentro de la carpeta también
 
 Para correrlo se usa así:
-´´´bash
+```bash
 mpirun -np <number_of_processes> --hostfile <hostfile_name>./<executable_name> <upper_limit>
-´´´
+```
 
 Por ejemplo:
-´´´bash
+```bash
 mpirun -np 2 --hostfile .mpi_hostfile ./primes 65536
-´´´
+```
 
