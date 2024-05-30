@@ -94,13 +94,21 @@ Esta parte ya puede ser hecha en otra computadora
 Ir a la parte de la red cableada en la configuración de redl (nodo esclavo)
 
 En la parte de IPv4:
+
 Asignar el método manual
-Asignar una Dirección:
+
+**Asignar una Dirección:**
+
 Dirección: 192.168.122.101
+
 Máscara de red: 255.255.255.0
+
 Puerta de enlace: 192.168.122.1
-Configurar el DNS:
+
+**Configurar el DNS:**
+
 Desmarcar el automático
+
 Asignar el 192.168.50.1
 
 Desconectarse y volverse a conectar para que los cambios ocurran
@@ -127,13 +135,21 @@ sudo apt-get install nfs-kernel-server nfs-common portmap
 Ir a la parte de la red cableada en la configuración de red
 
 En la parte de IPv4:
+
 Asignar el método manual
-Asignar una Dirección:
+
+**Asignar una Dirección:**
+
 Dirección: 192.168.50.100
+
 Máscara de red: 255.255.255.0
+
 Puerta de enlace: 192.168.50.1
-Configurar el DNS:
+
+**Configurar el DNS:**
+
 Desmarcar el automático
+
 Asignar el 192.168.50.1
 
 Proceder a conectar el nodo maestro en la red cableada para que el LAN funcione
@@ -199,7 +215,7 @@ Se abrirá el archivo para editar y se deben agregar las direcciones ip del mast
 192.168.50.100 master master
 192.168.122.101 node1 node1
 192.168.50.102 node2 node2
-192.168.122.101 node3 node3
+192.168.122.103 node3 node3
 ```
 
 Ahora se podrá conectar por ssh a partir del nombre guardado, pero con el usuario del nodo
@@ -322,6 +338,6 @@ mpirun -np <number_of_processes> --hostfile <hostfile_name>./<executable_name> <
 
 Por ejemplo:
 ```bash
-mpirun -np 2 --hostfile .mpi_hostfile ./primes 65536
+mpirun -np 4 --hostfile .mpi_hostfile ./gaussian_blur_mpi
 ```
 
