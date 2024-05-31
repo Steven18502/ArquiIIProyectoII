@@ -1,4 +1,4 @@
-# Proyecto 2 del curso de Arquitectura de Computadores II del segundo semestre 2024 del Instituto Tecnológico de Costa Rica
+# Proyecto 2 del curso de Arquitectura de Computadores II del primer semestre 2024 del Instituto Tecnológico de Costa Rica
 
 ## Cluster Beowulf para algoritmo de procesamiento de imágenes
 
@@ -296,6 +296,7 @@ sudo umount -a
 
 El paquete de build-essentials tiene lo necesario para desarrollar y compilar, que ya se intenta instalar al inicio (usualmente ya viene en el SO)
 
+
 8. Configuración para MPI
 
 Se crea un archivo de compilación .mpi_hostfile en el nodo maestro
@@ -323,15 +324,29 @@ Cada slot son la cantidad de procesos por ejecutar
 
 Aquí se puede realizar ya una prueba del cluster
 
-El código por correr paralelamente debe estar dentro de la carpeta compartida
+9. Compilación del código por paralelizar
+
+El código por correr paralelamente debe estar dentro de la carpeta compartida junto a los archivos que necesite.
 
 Debe incluir la libreria mpi y sus comandos para correrlo paralelamente
 
 Se debe compilar con el compilador de mpi
+Para este proyecto se codificó en el lenguaje c por lo que se usrá así
+```bash
+mpicc -o <executable_name> <program_code_file> -lm
+```
 
-Y su binario ejecutable debe estar dentro de la carpeta también
+Por ejemplo:
+```bash
+mpicc -o gaussian_blur_mpi gaussian_blur_mpi.c -lm
+```
 
-Para correrlo se usa así:
+
+10. Ejecución del programa paralelizable con mpi
+
+Su binario ejecutable debe estar dentro de la carpeta compartida por nfs
+
+Para correrlo con mpi:
 ```bash
 mpirun -np <number_of_processes> --hostfile <hostfile_name>./<executable_name> <upper_limit>
 ```
@@ -340,4 +355,25 @@ Por ejemplo:
 ```bash
 mpirun -np 4 --hostfile .mpi_hostfile ./gaussian_blur_mpi
 ```
+
+
+11. Para volver a correr el programa después de apagar las computadoras o si se pierde la conexión del mount nfs
+
+Reiniciar el servicio de nfs en el nodo master
+```bash
+sudo /etc/init.d/nfs-kernel-server restart
+```
+
+Verificar que el nodo master siga compartiendo la carpeta por nfs en el nodo esclavo
+```bash
+showmount -e 192.168.50.100
+```
+
+Volver a hacer el mount en el nodo esclavo
+```bash
+sudo mount -a
+```
+
+Se recomienda salirse de la carpeta /home/clusterdir/ y volver a ingresar, si se encuentra en esta, para que los archivos carguen nuevamente
+
 
