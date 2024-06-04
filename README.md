@@ -190,6 +190,11 @@ Se mueve el archivo dentro de .ssh como "authorized_keys"
 mv id_rsa.pub .ssh/authorized_keys
 ```
 
+Si al correr el programa paralelizado da problemas la conexión intentar hacer este paso anterior solo con este comando, el usuario del esclavo y el ip del esclavo
+```bash
+ssh-copy-id slaveUser@192.168.122.101
+```
+
 Para acceder al nodo esclavo desde el nodo maestro
 
 Se hace una conexión vía ssh
@@ -375,5 +380,4 @@ sudo mount -a
 ```
 
 Se recomienda salirse de la carpeta /home/clusterdir/ y volver a ingresar, si se encuentra en esta, para que los archivos carguen nuevamente
-
 
